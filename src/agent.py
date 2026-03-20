@@ -1,46 +1,14 @@
 """
-Core agent loop: sends messages to OpenAI, handles tool calls iteratively,
-returns the final text response.
+Agent dispatcher — selects the LLM backend based on the LLM_PROVIDER env var.
+
+Supported values:
+  LLM_PROVIDER=openai      (default) requires OPENAI_API_KEY
+  LLM_PROVIDER=anthropic            requires ANTHROPIC_API_KEY
 """
 
-import json
 import os
 
 from kubernetes import client as k8s_client
-from openai import OpenAI
-
-from .tools import TOOLS, dispatch
-
-MODEL = os.getenv("OPENAI_MODEL", "gpt-4o")
-
-SYSTEM_PROMPT = """You are a Kubernetes expert assistant. You help engineers troubleshoot
-cluster issues by querying the Kubernetes API and reasoning about what you find.
-
-When asked about a problem:
-1. Gather relevant context using available tools (pods, logs, events, deployments, nodes)
-2. Look for patterns: CrashLoopBackOff, OOMKilled, Pending pods, image pull errors, etc.
-3. Explain the root cause clearly in plain English
-4. Suggest concrete remediation steps
-
-Always check events alongside pod/deployment status — they often contain the most useful signal.
-Be concise but thorough. If you need more information, ask the user."""
-
-# Convert Anthropic-style tool definitions to OpenAI function format
-def _to_openai_tools(tools: list[dict]) -> list[dict]:
-    return [
-        {
-            "type": "function",
-            "function": {
-                "name": t["name"],
-                "description": t["description"],
-                "parameters": t["input_schema"],
-            },
-        }
-        for t in tools
-    ]
-
-
-OPENAI_TOOLS = _to_openai_tools(TOOLS)
 
 
 def run(
@@ -48,37 +16,13 @@ def run(
     core_api: k8s_client.CoreV1Api,
     apps_api: k8s_client.AppsV1Api,
 ) -> str:
-    """
-    Run the agent loop for a single user turn.
-    Handles multi-step tool calling until the model returns a final text response.
-    Returns the assistant's final text response.
-    """
-    openai_client = OpenAI()
-    current_messages = [{"role": "system", "content": SYSTEM_PROMPT}] + messages.copy()
+    provider = os.getenv("LLM_PROVIDER", "openai").lower()
 
-    while True:
-        response = openai_client.chat.completions.create(
-            model=MODEL,
-            tools=OPENAI_TOOLS,
-            messages=current_messages,
-        )
+    if provider == "anthropic":
+        from .agent_anthropic import run as _run
+    elif provider == "openai":
+        from .agent_openai import run as _run
+    else:
+        raise ValueError(f"Unknown LLM_PROVIDER '{provider}'. Choose 'openai' or 'anthropic'.")
 
-        message = response.choices[0].message
-        tool_calls = message.tool_calls or []
-
-        # No tool calls — we have the final answer
-        if not tool_calls:
-            return message.content or ""
-
-        # Append assistant message (with tool calls) to history
-        current_messages.append(message)
-
-        # Execute all tool calls and collect results
-        for tool_call in tool_calls:
-            tool_input = json.loads(tool_call.function.arguments)
-            result = dispatch(tool_call.function.name, tool_input, core_api, apps_api)
-            current_messages.append({
-                "role": "tool",
-                "tool_call_id": tool_call.id,
-                "content": json.dumps(result),
-            })
+    return _run(messages, core_api, apps_api)
