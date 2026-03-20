@@ -1,4 +1,5 @@
 .env
+.idea/
 __pycache__/
 *.pyc
 *.pyo
@@ -8,4 +9,6 @@ dist/
 build/
 *.egg-info/
 .venv/
-venv/
+venv/# pixi environments
+.pixi/*
+!.pixi/config.toml
