@@ -4,7 +4,7 @@ import json
 import os
 
 from kubernetes import client as k8s_client
-from openai import OpenAI
+from openai import BadRequestError, OpenAI
 
 from .tools import TOOLS, dispatch
 
@@ -45,11 +45,23 @@ def run(
     current_messages = [{"role": "system", "content": SYSTEM_PROMPT}] + messages.copy()
 
     while True:
-        response = client.chat.completions.create(
-            model=MODEL,
-            tools=_OPENAI_TOOLS,
-            messages=current_messages,
-        )
+        try:
+            response = client.chat.completions.create(
+                model=MODEL,
+                tools=_OPENAI_TOOLS,
+                messages=current_messages,
+            )
+        except BadRequestError as e:
+            if e.code == "context_length_exceeded":
+                # Drop the two oldest non-system messages (one user + one assistant turn)
+                non_system = [m for m in current_messages if m.get("role") != "system"]
+                if len(non_system) <= 2:
+                    raise RuntimeError("Context length exceeded and no messages left to drop.") from e
+                current_messages = [current_messages[0]] + current_messages[3:]
+                while len(current_messages) > 1 and current_messages[1].get("role") != "user":
+                    current_messages = [current_messages[0]] + current_messages[2:]
+                continue
+            raise
 
         message = response.choices[0].message
         tool_calls = message.tool_calls or []
@@ -57,7 +69,7 @@ def run(
         if not tool_calls:
             return message.content or ""
 
-        current_messages.append(message)
+        current_messages.append(message.model_dump())
 
         for tool_call in tool_calls:
             tool_input = json.loads(tool_call.function.arguments)

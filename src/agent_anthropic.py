@@ -33,13 +33,22 @@ def run(
     current_messages = messages.copy()
 
     while True:
-        response = client.messages.create(
-            model=MODEL,
-            max_tokens=4096,
-            system=SYSTEM_PROMPT,
-            tools=TOOLS,
-            messages=current_messages,
-        )
+        try:
+            response = client.messages.create(
+                model=MODEL,
+                max_tokens=4096,
+                system=SYSTEM_PROMPT,
+                tools=TOOLS,
+                messages=current_messages,
+            )
+        except anthropic.BadRequestError as e:
+            if e.body.get("error", {}).get("type") == "invalid_request_error" and "tokens" in str(e):
+                # Drop the two oldest messages (one user + one assistant turn)
+                if len(current_messages) <= 2:
+                    raise RuntimeError("Context length exceeded and no messages left to drop.") from e
+                current_messages = current_messages[2:]
+                continue
+            raise
 
         tool_uses = [b for b in response.content if b.type == "tool_use"]
         text_blocks = [b for b in response.content if b.type == "text"]
