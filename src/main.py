@@ -26,7 +26,7 @@ def main() -> None:
     console.print("Connecting to Kubernetes cluster...", style="dim")
 
     try:
-        core_api, apps_api = load_kube_client()
+        core_api, apps_api, batch_api = load_kube_client()
         console.print("Connected. [dim]Type your question or 'exit' to quit.[/]\n")
     except RuntimeError as e:
         console.print(f"[bold red]Failed to connect to cluster:[/] {e}")
@@ -51,7 +51,7 @@ def main() -> None:
 
         with console.status("[dim]Thinking...[/]", spinner="dots"):
             try:
-                response = run(messages, core_api, apps_api)
+                response = run(messages, core_api, apps_api, batch_api)
             except Exception as e:
                 console.print(f"[bold red]Error:[/] {e}")
                 messages.pop()  # Remove the failed user message

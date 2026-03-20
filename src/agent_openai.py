@@ -39,6 +39,7 @@ def run(
     messages: list[dict],
     core_api: k8s_client.CoreV1Api,
     apps_api: k8s_client.AppsV1Api,
+    batch_api: k8s_client.BatchV1Api,
 ) -> str:
     client = OpenAI()
     current_messages = [{"role": "system", "content": SYSTEM_PROMPT}] + messages.copy()
@@ -60,7 +61,7 @@ def run(
 
         for tool_call in tool_calls:
             tool_input = json.loads(tool_call.function.arguments)
-            result = dispatch(tool_call.function.name, tool_input, core_api, apps_api)
+            result = dispatch(tool_call.function.name, tool_input, core_api, apps_api, batch_api)
             current_messages.append({
                 "role": "tool",
                 "tool_call_id": tool_call.id,

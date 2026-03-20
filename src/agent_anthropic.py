@@ -27,6 +27,7 @@ def run(
     messages: list[dict],
     core_api: k8s_client.CoreV1Api,
     apps_api: k8s_client.AppsV1Api,
+    batch_api: k8s_client.BatchV1Api,
 ) -> str:
     client = anthropic.Anthropic()
     current_messages = messages.copy()
@@ -50,7 +51,7 @@ def run(
 
         tool_results = []
         for tool_use in tool_uses:
-            result = dispatch(tool_use.name, tool_use.input, core_api, apps_api)
+            result = dispatch(tool_use.name, tool_use.input, core_api, apps_api, batch_api)
             tool_results.append({
                 "type": "tool_result",
                 "tool_use_id": tool_use.id,

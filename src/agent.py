@@ -15,6 +15,7 @@ def run(
     messages: list[dict],
     core_api: k8s_client.CoreV1Api,
     apps_api: k8s_client.AppsV1Api,
+    batch_api: k8s_client.BatchV1Api,
 ) -> str:
     provider = os.getenv("LLM_PROVIDER", "openai").lower()
 
@@ -25,4 +26,4 @@ def run(
     else:
         raise ValueError(f"Unknown LLM_PROVIDER '{provider}'. Choose 'openai' or 'anthropic'.")
 
-    return _run(messages, core_api, apps_api)
+    return _run(messages, core_api, apps_api, batch_api)

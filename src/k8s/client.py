@@ -2,7 +2,7 @@ import os
 from kubernetes import client, config
 
 
-def load_kube_client() -> tuple[client.CoreV1Api, client.AppsV1Api]:
+def load_kube_client() -> tuple[client.CoreV1Api, client.AppsV1Api, client.BatchV1Api]:
     """Load Kubernetes client from kubeconfig or in-cluster config.
 
     Env vars:
@@ -23,4 +23,4 @@ def load_kube_client() -> tuple[client.CoreV1Api, client.AppsV1Api]:
     except Exception as e:
         raise RuntimeError(f"Failed to load Kubernetes config: {e}") from e
 
-    return client.CoreV1Api(), client.AppsV1Api()
+    return client.CoreV1Api(), client.AppsV1Api(), client.BatchV1Api()

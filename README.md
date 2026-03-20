@@ -105,6 +105,8 @@ The agent has access to the following Kubernetes operations:
 | `get_deployments`  | List deployments with replica counts             |
 | `get_deployment`   | Detailed deployment info and rollout conditions  |
 | `get_nodes`        | Node health, capacity, and conditions            |
+| `list_namespaces`  | List all namespaces in the cluster               |
+| `get_cronjobs`     | List CronJobs with schedule and last run status  |
 
 ## Project structure
 

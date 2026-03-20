@@ -5,6 +5,7 @@ and the dispatcher that routes tool calls to their implementations.
 
 from kubernetes import client as k8s_client
 
+from .cronjobs import get_cronjobs
 from .deployments import get_deployment, get_deployments
 from .events import get_events
 from .namespaces import list_namespaces
@@ -101,6 +102,19 @@ TOOLS = [
             "properties": {},
         },
     },
+    {
+        "name": "get_cronjobs",
+        "description": "List all CronJobs in a namespace with their schedule, suspended status, active job count, and last run times.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "namespace": {
+                    "type": "string",
+                    "description": "Namespace. Defaults to 'default'.",
+                }
+            },
+        },
+    },
 ]
 
 
@@ -109,6 +123,7 @@ def dispatch(
     tool_input: dict,
     core_api: k8s_client.CoreV1Api,
     apps_api: k8s_client.AppsV1Api,
+    batch_api: k8s_client.BatchV1Api,
 ) -> dict:
     """Route a tool call to its implementation."""
     ns = tool_input.get("namespace", "default")
@@ -137,5 +152,7 @@ def dispatch(
             return get_nodes(core_api)
         case "list_namespaces":
             return list_namespaces(core_api)
+        case "get_cronjobs":
+            return get_cronjobs(batch_api, namespace=ns)
         case _:
             return {"error": f"Unknown tool: {tool_name}"}
