@@ -13,7 +13,7 @@ Ask questions in plain English and the agent will query your cluster, reason abo
 
 ## Requirements
 
-- Python 3.11+
+- [pixi](https://pixi.sh) (recommended) or Python 3.11+
 - Access to a Kubernetes cluster (local or remote)
 - An OpenAI or Anthropic API key
 
@@ -22,10 +22,23 @@ Ask questions in plain English and the agent will query your cluster, reason abo
 ```bash
 git clone https://github.com/youruser/k8s-copilot.git
 cd k8s-copilot
-pip install -e .
 ```
 
-## Configuration
+Install dependencies with pixi:
+```bash
+pixi run pip install -e .
+```
+
+## Step 1 — Log in to your Kubernetes cluster
+
+Before running k8s-copilot, make sure you are authenticated to your cluster. The exact command depends on your cloud provider.
+
+Verify the connection works:
+```bash
+kubectl get nodes
+```
+
+## Step 2 — Configure
 
 Copy the example env file and fill in your values:
 
@@ -43,7 +56,7 @@ cp .env.example .env
 | `KUBECONFIG`         | No       | `~/.kube/config`     | Path to kubeconfig file                  |
 | `KUBECONFIG_CONTEXT` | No       | active context       | Lock to a specific kubeconfig context    |
 
-## Setting up an isolated kubeconfig (recommended)
+## Step 3 — Setting up an isolated kubeconfig (recommended)
 
 By default, k8s-copilot uses your active kubectl context. To lock it to a specific cluster and prevent accidental access to other clusters, create a dedicated kubeconfig file:
 
@@ -65,10 +78,10 @@ KUBECONFIG=/Users/you/.kube/k8s-copilot.kubeconfig
 KUBECONFIG_CONTEXT=<context-name>
 ```
 
-## Usage
+## Step 4 — Run
 
 ```bash
-k8s-copilot
+pixi run k8s-copilot
 ```
 
 Example questions:
