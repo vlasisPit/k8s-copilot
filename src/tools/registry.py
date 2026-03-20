@@ -7,6 +7,7 @@ from kubernetes import client as k8s_client
 
 from .deployments import get_deployment, get_deployments
 from .events import get_events
+from .namespaces import list_namespaces
 from .nodes import get_nodes
 from .pods import describe_pod, get_pod_logs, get_pods
 
@@ -92,6 +93,14 @@ TOOLS = [
             "properties": {},
         },
     },
+    {
+        "name": "list_namespaces",
+        "description": "List all namespaces in the cluster with their status. Use this to discover available namespaces before querying pods, deployments, or events.",
+        "input_schema": {
+            "type": "object",
+            "properties": {},
+        },
+    },
 ]
 
 
@@ -126,5 +135,7 @@ def dispatch(
             return get_deployment(apps_api, name=tool_input["name"], namespace=ns)
         case "get_nodes":
             return get_nodes(core_api)
+        case "list_namespaces":
+            return list_namespaces(core_api)
         case _:
             return {"error": f"Unknown tool: {tool_name}"}
