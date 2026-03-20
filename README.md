@@ -1,0 +1,112 @@
+# k8s-copilot
+
+A terminal-based AI copilot for Kubernetes troubleshooting, powered by OpenAI or Anthropic Claude.
+
+Ask questions in plain English and the agent will query your cluster, reason about what it finds, and explain the root cause with concrete remediation steps — no kubectl expertise required.
+
+## Features
+
+- Conversational interface with full multi-turn memory
+- Autonomous tool chaining — the agent queries pods, logs, events, deployments, and nodes on its own
+- Supports both **OpenAI** (gpt-4o) and **Anthropic** (claude-opus-4-6) as LLM backends
+- Lockable to a specific kubeconfig context for safety
+
+## Requirements
+
+- Python 3.11+
+- Access to a Kubernetes cluster (local or remote)
+- An OpenAI or Anthropic API key
+
+## Installation
+
+```bash
+git clone https://github.com/youruser/k8s-copilot.git
+cd k8s-copilot
+pip install -e .
+```
+
+## Configuration
+
+Copy the example env file and fill in your values:
+
+```bash
+cp .env.example .env
+```
+
+| Variable             | Required | Default              | Description                              |
+|----------------------|----------|----------------------|------------------------------------------|
+| `LLM_PROVIDER`       | No       | `openai`             | `openai` or `anthropic`                  |
+| `OPENAI_API_KEY`     | If OpenAI | —                   | Your OpenAI API key                      |
+| `OPENAI_MODEL`       | No       | `gpt-4o`             | OpenAI model override                    |
+| `ANTHROPIC_API_KEY`  | If Anthropic | —               | Your Anthropic API key                   |
+| `ANTHROPIC_MODEL`    | No       | `claude-opus-4-6`    | Anthropic model override                 |
+| `KUBECONFIG`         | No       | `~/.kube/config`     | Path to kubeconfig file                  |
+| `KUBECONFIG_CONTEXT` | No       | active context       | Lock to a specific kubeconfig context    |
+
+## Setting up an isolated kubeconfig (recommended)
+
+By default, k8s-copilot uses your active kubectl context. To lock it to a specific cluster and prevent accidental access to other clusters, create a dedicated kubeconfig file:
+
+**1. Find the context you want to use:**
+```bash
+kubectl config get-contexts
+```
+
+**2. Export just that context into its own file:**
+```bash
+kubectl config view --minify --context=<context-name> --flatten > ~/.kube/k8s-copilot.kubeconfig
+```
+
+The `--minify` flag strips all other contexts, clusters, and credentials, producing a self-contained file with only the target cluster.
+
+**3. Set the env vars in your `.env`:**
+```
+KUBECONFIG=/Users/you/.kube/k8s-copilot.kubeconfig
+KUBECONFIG_CONTEXT=<context-name>
+```
+
+## Usage
+
+```bash
+k8s-copilot
+```
+
+Example questions:
+- `Why are my pods crashing in the payments namespace?`
+- `Is anything unhealthy in the cluster?`
+- `What's wrong with the auth deployment?`
+- `Show me recent warning events`
+
+Type `exit` or press `Ctrl+C` to quit.
+
+## Available tools
+
+The agent has access to the following Kubernetes operations:
+
+| Tool               | Description                                      |
+|--------------------|--------------------------------------------------|
+| `get_pods`         | List pods with status and container states       |
+| `describe_pod`     | Detailed pod info, restart counts, exit reasons  |
+| `get_pod_logs`     | Fetch logs (supports previous crashed container) |
+| `get_events`       | Cluster events, warnings first                   |
+| `get_deployments`  | List deployments with replica counts             |
+| `get_deployment`   | Detailed deployment info and rollout conditions  |
+| `get_nodes`        | Node health, capacity, and conditions            |
+
+## Project structure
+
+```
+src/
+├── main.py              # CLI entry point
+├── agent.py             # LLM backend dispatcher
+├── agent_openai.py      # OpenAI implementation
+├── agent_anthropic.py   # Anthropic implementation
+├── k8s/
+│   └── client.py        # Kubernetes client initialisation
+└── tools/
+    ├── registry.py      # Tool definitions and dispatcher
+    ├── pods.py
+    ├── deployments.py
+    ├── events.py
+    └── nodes.py
+```
