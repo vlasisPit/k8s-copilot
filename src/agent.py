@@ -1,17 +1,17 @@
 """
-Core agent loop: sends messages to Claude, handles tool calls iteratively,
+Core agent loop: sends messages to OpenAI, handles tool calls iteratively,
 returns the final text response.
 """
 
 import json
 import os
 
-import anthropic
 from kubernetes import client as k8s_client
+from openai import OpenAI
 
 from .tools import TOOLS, dispatch
 
-MODEL = os.getenv("ANTHROPIC_MODEL", "claude-opus-4-6")
+MODEL = os.getenv("OPENAI_MODEL", "gpt-4o")
 
 SYSTEM_PROMPT = """You are a Kubernetes expert assistant. You help engineers troubleshoot
 cluster issues by querying the Kubernetes API and reasoning about what you find.
@@ -25,6 +25,23 @@ When asked about a problem:
 Always check events alongside pod/deployment status — they often contain the most useful signal.
 Be concise but thorough. If you need more information, ask the user."""
 
+# Convert Anthropic-style tool definitions to OpenAI function format
+def _to_openai_tools(tools: list[dict]) -> list[dict]:
+    return [
+        {
+            "type": "function",
+            "function": {
+                "name": t["name"],
+                "description": t["description"],
+                "parameters": t["input_schema"],
+            },
+        }
+        for t in tools
+    ]
+
+
+OPENAI_TOOLS = _to_openai_tools(TOOLS)
+
 
 def run(
     messages: list[dict],
@@ -33,40 +50,35 @@ def run(
 ) -> str:
     """
     Run the agent loop for a single user turn.
-    Handles multi-step tool calling until Claude returns a final text response.
+    Handles multi-step tool calling until the model returns a final text response.
     Returns the assistant's final text response.
     """
-    anthropic_client = anthropic.Anthropic()
-    current_messages = messages.copy()
+    openai_client = OpenAI()
+    current_messages = [{"role": "system", "content": SYSTEM_PROMPT}] + messages.copy()
 
     while True:
-        response = anthropic_client.messages.create(
+        response = openai_client.chat.completions.create(
             model=MODEL,
-            max_tokens=4096,
-            system=SYSTEM_PROMPT,
-            tools=TOOLS,
+            tools=OPENAI_TOOLS,
             messages=current_messages,
         )
 
-        # Collect any tool calls and text in this response
-        tool_uses = [b for b in response.content if b.type == "tool_use"]
-        text_blocks = [b for b in response.content if b.type == "text"]
+        message = response.choices[0].message
+        tool_calls = message.tool_calls or []
 
         # No tool calls — we have the final answer
-        if not tool_uses:
-            return text_blocks[0].text if text_blocks else ""
+        if not tool_calls:
+            return message.content or ""
 
-        # Append assistant message with all content blocks
-        current_messages.append({"role": "assistant", "content": response.content})
+        # Append assistant message (with tool calls) to history
+        current_messages.append(message)
 
         # Execute all tool calls and collect results
-        tool_results = []
-        for tool_use in tool_uses:
-            result = dispatch(tool_use.name, tool_use.input, core_api, apps_api)
-            tool_results.append({
-                "type": "tool_result",
-                "tool_use_id": tool_use.id,
+        for tool_call in tool_calls:
+            tool_input = json.loads(tool_call.function.arguments)
+            result = dispatch(tool_call.function.name, tool_input, core_api, apps_api)
+            current_messages.append({
+                "role": "tool",
+                "tool_call_id": tool_call.id,
                 "content": json.dumps(result),
             })
-
-        current_messages.append({"role": "user", "content": tool_results})

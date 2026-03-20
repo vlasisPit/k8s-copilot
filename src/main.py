@@ -18,8 +18,8 @@ console = Console()
 
 
 def main() -> None:
-    if not os.getenv("ANTHROPIC_API_KEY"):
-        console.print("[bold red]Error:[/] ANTHROPIC_API_KEY is not set. Copy .env.example to .env and add your key.")
+    if not os.getenv("OPENAI_API_KEY"):
+        console.print("[bold red]Error:[/] OPENAI_API_KEY is not set. Copy .env.example to .env and add your key.")
         sys.exit(1)
 
     console.print(Rule("[bold cyan]k8s-copilot[/]"))
