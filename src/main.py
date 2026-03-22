@@ -47,6 +47,19 @@ def main() -> None:
             console.print("Bye.")
             break
 
+        if user_input.lower() == "diagnose":
+            user_input = (
+                "Perform a complete cluster health check. Follow these steps:\n"
+                "1. List all namespaces\n"
+                "2. For each namespace, check pods for any that are not Running or Completed\n"
+                "3. Check deployments for any with unavailable replicas\n"
+                "4. Check recent warning events across namespaces\n"
+                "5. Check node health\n"
+                "Summarize all issues found, their likely cause, and suggested fixes. "
+                "If everything looks healthy, say so clearly."
+            )
+            console.print("[dim]Running full cluster health check...[/]\n")
+
         messages.append({"role": "user", "content": user_input})
 
         def on_tool_call(tool_name: str, tool_input: dict) -> None:
