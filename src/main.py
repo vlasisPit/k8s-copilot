@@ -49,9 +49,14 @@ def main() -> None:
 
         messages.append({"role": "user", "content": user_input})
 
+        def on_tool_call(tool_name: str, tool_input: dict) -> None:
+            ns = tool_input.get("namespace", "")
+            suffix = f" [dim](namespace: {ns})[/]" if ns else ""
+            console.print(f"  [dim cyan]→ {tool_name}[/]{suffix}")
+
         with console.status("[dim]Thinking...[/]", spinner="dots"):
             try:
-                response = run(messages, core_api, apps_api, batch_api)
+                response = run(messages, core_api, apps_api, batch_api, on_tool_call)
             except Exception as e:
                 console.print(f"[bold red]Error:[/] {e}")
                 messages.pop()  # Remove the failed user message

@@ -7,6 +7,7 @@ Supported values:
 """
 
 import os
+from collections.abc import Callable
 
 from kubernetes import client as k8s_client
 
@@ -16,6 +17,7 @@ def run(
     core_api: k8s_client.CoreV1Api,
     apps_api: k8s_client.AppsV1Api,
     batch_api: k8s_client.BatchV1Api,
+    on_tool_call: Callable[[str, dict], None] | None = None,
 ) -> str:
     provider = os.getenv("LLM_PROVIDER", "openai").lower()
 
@@ -26,4 +28,4 @@ def run(
     else:
         raise ValueError(f"Unknown LLM_PROVIDER '{provider}'. Choose 'openai' or 'anthropic'.")
 
-    return _run(messages, core_api, apps_api, batch_api)
+    return _run(messages, core_api, apps_api, batch_api, on_tool_call)

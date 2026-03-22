@@ -2,6 +2,7 @@
 
 import json
 import os
+from collections.abc import Callable
 
 import anthropic
 from kubernetes import client as k8s_client
@@ -28,6 +29,7 @@ def run(
     core_api: k8s_client.CoreV1Api,
     apps_api: k8s_client.AppsV1Api,
     batch_api: k8s_client.BatchV1Api,
+    on_tool_call: Callable[[str, dict], None] | None = None,
 ) -> str:
     client = anthropic.Anthropic()
     current_messages = messages.copy()
@@ -60,6 +62,8 @@ def run(
 
         tool_results = []
         for tool_use in tool_uses:
+            if on_tool_call:
+                on_tool_call(tool_use.name, tool_use.input)
             result = dispatch(tool_use.name, tool_use.input, core_api, apps_api, batch_api)
             tool_results.append({
                 "type": "tool_result",

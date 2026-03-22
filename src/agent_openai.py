@@ -2,6 +2,7 @@
 
 import json
 import os
+from collections.abc import Callable
 
 from kubernetes import client as k8s_client
 from openai import BadRequestError, OpenAI
@@ -40,6 +41,7 @@ def run(
     core_api: k8s_client.CoreV1Api,
     apps_api: k8s_client.AppsV1Api,
     batch_api: k8s_client.BatchV1Api,
+    on_tool_call: Callable[[str, dict], None] | None = None,
 ) -> str:
     client = OpenAI()
     current_messages = [{"role": "system", "content": SYSTEM_PROMPT}] + messages.copy()
@@ -73,6 +75,8 @@ def run(
 
         for tool_call in tool_calls:
             tool_input = json.loads(tool_call.function.arguments)
+            if on_tool_call:
+                on_tool_call(tool_call.function.name, tool_input)
             result = dispatch(tool_call.function.name, tool_input, core_api, apps_api, batch_api)
             current_messages.append({
                 "role": "tool",
