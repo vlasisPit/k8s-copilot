@@ -8,8 +8,11 @@ Ask questions in plain English and the agent will query your cluster, reason abo
 
 - Conversational interface with full multi-turn memory
 - Autonomous tool chaining — the agent queries pods, logs, events, deployments, and nodes on its own
+- Real-time tool activity display — see what the agent is doing as it reasons
+- `diagnose` command — one command scans the entire cluster and summarizes all issues
 - Supports both **OpenAI** (gpt-4o) and **Anthropic** (claude-opus-4-6) as LLM backends
 - Lockable to a specific kubeconfig context for safety
+- Auto-recovers from context window limits by dropping oldest messages
 
 ## Requirements
 
@@ -31,7 +34,22 @@ pixi run pip install -e .
 
 ## Step 1 — Log in to your Kubernetes cluster
 
-Before running k8s-copilot, make sure you are authenticated to your cluster. The exact command depends on your cloud provider.
+Before running k8s-copilot, make sure you are authenticated to your cluster. The exact command depends on your cloud provider:
+
+**AWS EKS:**
+```bash
+aws eks update-kubeconfig --region <region> --name <cluster-name>
+```
+
+**Google GKE:**
+```bash
+gcloud container clusters get-credentials <cluster-name> --region <region>
+```
+
+**Azure AKS:**
+```bash
+az aks get-credentials --resource-group <resource-group> --name <cluster-name>
+```
 
 Verify the connection works:
 ```bash
@@ -84,6 +102,9 @@ KUBECONFIG_CONTEXT=<context-name>
 pixi run k8s-copilot
 ```
 
+Special commands:
+- `diagnose` — scan the entire cluster and report all issues
+
 Example questions:
 - `Why are my pods crashing in the payments namespace?`
 - `Is anything unhealthy in the cluster?`
@@ -120,8 +141,11 @@ src/
 │   └── client.py        # Kubernetes client initialisation
 └── tools/
     ├── registry.py      # Tool definitions and dispatcher
+    ├── utils.py         # Shared error handling
     ├── pods.py
     ├── deployments.py
     ├── events.py
-    └── nodes.py
+    ├── nodes.py
+    ├── namespaces.py
+    └── cronjobs.py
 ```
