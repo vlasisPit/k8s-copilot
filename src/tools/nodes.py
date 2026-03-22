@@ -1,5 +1,7 @@
 from kubernetes import client
 
+from .utils import k8s_error
+
 
 def get_nodes(core_api: client.CoreV1Api) -> dict:
     """List all nodes with their status and resource capacity."""
@@ -31,4 +33,4 @@ def get_nodes(core_api: client.CoreV1Api) -> dict:
             })
         return {"nodes": result, "count": len(result)}
     except Exception as e:
-        return {"error": str(e)}
+        return {"error": k8s_error(e)}

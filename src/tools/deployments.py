@@ -1,5 +1,7 @@
 from kubernetes import client
 
+from .utils import k8s_error
+
 
 def get_deployments(apps_api: client.AppsV1Api, namespace: str = "default") -> dict:
     """List all deployments in a namespace with rollout status."""
@@ -24,7 +26,7 @@ def get_deployments(apps_api: client.AppsV1Api, namespace: str = "default") -> d
             })
         return {"deployments": result, "count": len(result)}
     except Exception as e:
-        return {"error": str(e), "namespace": namespace}
+        return {"error": k8s_error(e), "namespace": namespace}
 
 
 def get_deployment(apps_api: client.AppsV1Api, name: str, namespace: str = "default") -> dict:
@@ -63,4 +65,4 @@ def get_deployment(apps_api: client.AppsV1Api, name: str, namespace: str = "defa
             "labels": d.metadata.labels,
         }
     except Exception as e:
-        return {"error": str(e), "name": name, "namespace": namespace}
+        return {"error": k8s_error(e), "name": name, "namespace": namespace}

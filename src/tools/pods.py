@@ -1,5 +1,7 @@
 from kubernetes import client
 
+from .utils import k8s_error
+
 
 def get_pods(core_api: client.CoreV1Api, namespace: str = "default") -> dict:
     """List all pods in a namespace with their status."""
@@ -100,4 +102,4 @@ def get_pod_logs(
         )
         return {"logs": logs, "pod": name, "container": container, "previous": previous}
     except Exception as e:
-        return {"error": str(e), "pod": name}
+        return {"error": k8s_error(e), "pod": name}

@@ -1,5 +1,7 @@
 from kubernetes import client
 
+from .utils import k8s_error
+
 
 def get_cronjobs(batch_api: client.BatchV1Api, namespace: str = "default") -> dict:
     """List all CronJobs in a namespace with their schedule and last run status."""
@@ -18,4 +20,4 @@ def get_cronjobs(batch_api: client.BatchV1Api, namespace: str = "default") -> di
             })
         return {"cronjobs": result, "count": len(result)}
     except Exception as e:
-        return {"error": str(e), "namespace": namespace}
+        return {"error": k8s_error(e), "namespace": namespace}

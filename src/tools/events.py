@@ -1,5 +1,7 @@
 from kubernetes import client
 
+from .utils import k8s_error
+
 
 def get_events(
     core_api: client.CoreV1Api,
@@ -27,4 +29,4 @@ def get_events(
         result.sort(key=lambda e: (e["type"] != "Warning", e["last_time"]), reverse=False)
         return {"events": result, "count": len(result)}
     except Exception as e:
-        return {"error": str(e), "namespace": namespace}
+        return {"error": k8s_error(e), "namespace": namespace}
