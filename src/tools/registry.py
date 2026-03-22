@@ -8,6 +8,7 @@ from kubernetes import client as k8s_client
 from .cronjobs import get_cronjobs
 from .deployments import get_deployment, get_deployments
 from .events import get_events
+from .github import search_github
 from .namespaces import list_namespaces
 from .nodes import get_nodes
 from .pods import describe_pod, get_pod_logs, get_pods
@@ -115,6 +116,29 @@ TOOLS = [
             },
         },
     },
+    {
+        "name": "search_github",
+        "description": (
+            "Search GitHub issues for a specific error message or exception. "
+            "Use this after retrieving pod logs to find known bugs, open issues, or fixes "
+            "related to the error. Extract just the key error line before searching — "
+            "do not pass the entire log."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "error_message": {
+                    "type": "string",
+                    "description": "The specific error or exception text to search for.",
+                },
+                "repo": {
+                    "type": "string",
+                    "description": "Optional GitHub repo in 'owner/repo' format to scope the search.",
+                },
+            },
+            "required": ["error_message"],
+        },
+    },
 ]
 
 
@@ -154,5 +178,10 @@ def dispatch(
             return list_namespaces(core_api)
         case "get_cronjobs":
             return get_cronjobs(batch_api, namespace=ns)
+        case "search_github":
+            return search_github(
+                error_message=tool_input["error_message"],
+                repo=tool_input.get("repo"),
+            )
         case _:
             return {"error": f"Unknown tool: {tool_name}"}

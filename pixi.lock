@@ -282,13 +282,14 @@ packages:
 - pypi: ./
   name: k8s-copilot
   version: 0.1.0
-  sha256: 423c4c4bf666c06cc23371ca2864d64f3dc5489df7bdbbf18b82c29e59a7f57a
+  sha256: cc3a03085cd7b5fc9914d7fb2995a927bb43b9831dc66d91288596a3a18bcf2d
   requires_dist:
   - openai>=1.30.0
   - anthropic>=0.40.0
   - kubernetes>=31.0.0
   - rich>=13.0.0
   - python-dotenv>=1.0.0
+  - requests>=2.31.0
   - pytest>=8.0.0 ; extra == 'dev'
   - pytest-asyncio>=0.24.0 ; extra == 'dev'
   - ruff>=0.8.0 ; extra == 'dev'

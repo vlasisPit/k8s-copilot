@@ -73,6 +73,7 @@ cp .env.example .env
 | `ANTHROPIC_MODEL`    | No       | `claude-opus-4-6`    | Anthropic model override                 |
 | `KUBECONFIG`         | No       | `~/.kube/config`     | Path to kubeconfig file                  |
 | `KUBECONFIG_CONTEXT` | No       | active context       | Lock to a specific kubeconfig context    |
+| `GITHUB_TOKEN`       | No       | —                    | GitHub token for issue search (optional) |
 
 ## Step 3 — Setting up an isolated kubeconfig (recommended)
 
@@ -128,6 +129,7 @@ The agent has access to the following Kubernetes operations:
 | `get_nodes`        | Node health, capacity, and conditions            |
 | `list_namespaces`  | List all namespaces in the cluster               |
 | `get_cronjobs`     | List CronJobs with schedule and last run status  |
+| `search_github`    | Search GitHub issues for a specific error message |
 
 ## Project structure
 
