@@ -129,7 +129,10 @@ The agent has access to the following Kubernetes operations:
 | `get_nodes`        | Node health, capacity, and conditions            |
 | `list_namespaces`  | List all namespaces in the cluster               |
 | `get_cronjobs`     | List CronJobs with schedule and last run status  |
+| `get_image_git_info` | Fetch git commit/branch from an ECR image digest via OCI labels |
 | `search_github`    | Search GitHub issues for a specific error message |
+| `search_github_code` | Search source code in a GitHub repo for an error string |
+| `search_github_commits` | Search commit messages in a GitHub repo for an error string |
 
 ## Project structure
 
