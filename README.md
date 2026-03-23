@@ -116,7 +116,7 @@ Type `exit` or press `Ctrl+C` to quit.
 
 ## Available tools
 
-The agent has access to the following Kubernetes operations:
+### Kubernetes
 
 | Tool               | Description                                      |
 |--------------------|--------------------------------------------------|
@@ -129,10 +129,23 @@ The agent has access to the following Kubernetes operations:
 | `get_nodes`        | Node health, capacity, and conditions            |
 | `list_namespaces`  | List all namespaces in the cluster               |
 | `get_cronjobs`     | List CronJobs with schedule and last run status  |
-| `get_image_git_info` | Fetch git commit/branch from an ECR image digest via OCI labels |
-| `search_github`    | Search GitHub issues for a specific error message |
-| `search_github_code` | Search source code in a GitHub repo for an error string |
-| `search_github_commits` | Search commit messages in a GitHub repo for an error string |
+
+### ECR image tracing
+
+| Tool                  | Description                                                                 |
+|-----------------------|-----------------------------------------------------------------------------|
+| `get_image_git_info`  | Read OCI labels from a private ECR image to extract git commit, branch, and source repo. Falls back to reading the git SHA from the image tag when labels are absent. |
+| `find_repo_by_workflow` | Find the GitHub repo that builds a given image by searching `.github/workflows` files for the image name. Used when OCI labels are missing. |
+
+### GitHub
+
+| Tool                      | Description                                                              |
+|---------------------------|--------------------------------------------------------------------------|
+| `get_commit_info`         | Look up a git commit SHA and find which branches contain it. Scans all branches in parallel. |
+| `get_github_file_content` | Fetch lines from a file in a GitHub repo. Supports line ranges (e.g. line 137 from a stack trace) and search term highlighting. |
+| `search_github`           | Search GitHub issues for a specific error message                        |
+| `search_github_code`      | Search source code in a GitHub repo for an error string                  |
+| `search_github_commits`   | Search commit messages in a GitHub repo for an error string              |
 
 ## Project structure
 
@@ -150,6 +163,8 @@ src/
     ├── pods.py
     ├── deployments.py
     ├── events.py
+    ├── ecr.py           # ECR image metadata reader (OCI labels)
+    └── github.py        # GitHub issue, code, commit, and branch search
     ├── nodes.py
     ├── namespaces.py
     └── cronjobs.py

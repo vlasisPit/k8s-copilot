@@ -339,7 +339,7 @@ def find_repo_by_workflow(image_name: str, ecr_registry: str | None = None) -> d
     Args:
         image_name: The Docker image name to search for (e.g. 'carrara-tiledb-server').
         ecr_registry: Optional ECR registry hostname to narrow the search
-                      (e.g. '980565428655.dkr.ecr.us-east-1.amazonaws.com').
+                      (e.g. '980565411111.dkr.ecr.us-east-1.amazonaws.com').
     """
     try:
         # Search workflow files for the image name first — most specific signal

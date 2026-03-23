@@ -182,7 +182,7 @@ TOOLS = [
                     "type": "string",
                     "description": (
                         "Optional ECR registry hostname to narrow the search, "
-                        "e.g. '980565428655.dkr.ecr.us-east-1.amazonaws.com'."
+                        "e.g. '980565411111.dkr.ecr.us-east-1.amazonaws.com'."
                     ),
                 },
             },
